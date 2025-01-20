@@ -71,11 +71,9 @@ if __name__ == '__main__':
     url_list = [original_url + cate for cate in categories]    
     categories = [cate.split('/')[-1] for cate in categories] # truncate '\' for matching folder name
     
-    i = 0
-    for temp_url in url_list:
+    for i, temp_url in enumerate(url_list):
         data = scrape_data_by_cate(temp_url)
         with open(f"{data_dir}\data_{categories[i]}.json", 'w', encoding='utf-8') as f:
             json.dump(data, f, ensure_ascii=False, indent=2)
         print("Done scraping data for category:", temp_url)
-        i += 1
     print("Done scraping data for all categories")
