@@ -1,21 +1,23 @@
 package main
 
 import (
-	"log"
 	"app/db"
 	"app/handler"
+	"log"
+
 	"github.com/gin-gonic/gin"
 )
 
 func main() {
-	var err error
-	err = db.InitDB()
+	// DB initialization
+	database, err := db.InitDB()
 	if err != nil {
-		log.Fatal(err)
+		log.Fatalf("Failed to connect database: %v", err)
 	}
+	defer database.Close()
 
-	defer db.DB.Close()
-
+	// handler := new(handler.NewsHandler)
+	handler := handler.NewNewsHandler(database)
 	router := gin.Default()
 
 	newsRoutes := router.Group("/news")

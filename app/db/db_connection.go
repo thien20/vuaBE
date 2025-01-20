@@ -4,36 +4,44 @@ import (
 	"database/sql"
 	"log"
 	"os"
+	"path/filepath"
 
 	_ "github.com/go-sql-driver/mysql"
+	"github.com/joho/godotenv"
 )
 
-var DB *sql.DB
+// var DB *sql.DB
 
-func InitDB() error {
-	var err error
+func InitDB() (*sql.DB, error) {
 
 	// dsn := "root:admin123@tcp(localhost:3306)/news"
+	envPath := filepath.Join("..", ".env")
+	err := godotenv.Load(envPath)
+	if err != nil {
+		log.Println("Error loading .env file.")
+	}
+
 	dbUser := os.Getenv("DB_USER")
 	dbPassword := os.Getenv("DB_PASSWORD")
 	dbHost := os.Getenv("DB_HOST")
 	dbName := os.Getenv("DB_NAME")
+	dbPort := os.Getenv("DB_PORT")
 
-	dsn := dbUser + ":" + dbPassword + "@tcp(" + dbHost + ")/" + dbName
+	dsn := dbUser + ":" + dbPassword + "@tcp(" + dbHost + ":" + dbPort + ")/" + dbName
 
-	DB, err = sql.Open("mysql", dsn)
+	db, err := sql.Open("mysql", dsn)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
-	if err = DB.Ping(); err != nil {
-		return err
+	if err = db.Ping(); err != nil {
+		return nil, err
 	}
 
 	// Check if the database is connected
-	// rows, err := DB.Query("SELECT id, title FROM the_gioi LIMIT 1")
+	// rows, err := db.Query("SELECT id, title FROM the_gioi LIMIT 1")
 	// if err != nil {
-	// 	return err
+	// 	return nil, err
 	// }
 	// defer rows.Close()
 
@@ -43,7 +51,7 @@ func InitDB() error {
 	// if rows.Next() {
 	// 	err = rows.Scan(&id, &title)
 	// 	if err != nil {
-	// 		return err
+	// 		return nil, err
 	// 	}
 	// 	log.Printf("Fetched article: ID=%d, Title=%s", id, title)
 	// } else {
@@ -51,5 +59,5 @@ func InitDB() error {
 	// }
 
 	log.Println("Database connected!")
-	return nil
+	return db, nil
 }
