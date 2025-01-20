@@ -2,6 +2,7 @@ from bs4 import BeautifulSoup
 
 import requests
 import json
+import os
 
 def process_p_contents(p_contents):
     return " ".join(p_contents)
@@ -58,14 +59,22 @@ def scrape_data_by_cate(url):
 
 if __name__ == '__main__':
     original_url = 'https://vnexpress.net'
-    category = ['thoi-su', 'the-gioi', 'kinh-doanh', 'giai-tri', 'the-thao', 'phap-luat', 'giao-duc', 'suc-khoe', 'doi-song', 'du-lich', 'khoa-hoc', 'so-hoa', 'oto-xe-may', 'y-kien', 'tam-su']
-    url_list = [original_url + '/' + cate for cate in category]
+    data_dir = r'D:\MY_FOLDER\Project\vuaBE\data'
     
-    # temp_url = 'https://vnexpress.net/thoi-su'
+    # Take the categories from the vuacrawl.json file
+    # category = ['thoi-su', 'the-gioi', 'kinh-doanh', 'giai-tri', 'the-thao', 'phap-luat', 'giao-duc', 'suc-khoe', 'doi-song', 'du-lich', 'khoa-hoc', 'so-hoa', 'oto-xe-may', 'y-kien', 'tam-su']    
+    with open(r'D:\MY_FOLDER\Project\vuaBE\vuacrawl.json', encoding='utf-8') as f:
+        data = json.load(f)
+        categories = [item['share_url'] for item in data] # results: ['/thoi-su', '/goc-nhin', '/the-gioi']
+    
+    categories.remove('https://video.vnexpress.net')
+    url_list = [original_url + cate for cate in categories]    
+    categories = [cate.split('/')[-1] for cate in categories] # truncate '\' for matching folder name
+    
     i = 0
     for temp_url in url_list:
         data = scrape_data_by_cate(temp_url)
-        with open(f'data/data_{category[i]}.json', 'w', encoding='utf-8') as f:
+        with open(f"{data_dir}\data_{categories[i]}.json", 'w', encoding='utf-8') as f:
             json.dump(data, f, ensure_ascii=False, indent=2)
         print("Done scraping data for category:", temp_url)
         i += 1
