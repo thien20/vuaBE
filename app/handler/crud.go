@@ -1,68 +1,43 @@
 package handler
 
 import (
-	"database/sql"
+	"app/models"
+	"app/repository"
 	"net/http"
+	"strconv"
 
 	"github.com/gin-gonic/gin"
 )
 
-type News struct {
-	ID      int    `json:"id"`
-	Link    string `json:"link"`
-	Title   string `json:"title"`
-	Content string `json:"content"`
-}
+// HANDLER IS USED TO HANDLE BUSINESS LOGIC
 
 type NewsHandler struct {
-	db *sql.DB
+	newRepository repository.NewRepositoryInterface
 }
 
-func NewNewsHandler(db *sql.DB) *NewsHandler {
-	return &NewsHandler{db: db}
+func NewNewsHandler(newRepository repository.NewRepositoryInterface) *NewsHandler {
+	return &NewsHandler{newRepository: newRepository}
 }
 
-// Read
 func (h *NewsHandler) GetNewsByCategory(c *gin.Context) {
 	category := c.Param("category")
-
-	query := "SELECT * FROM `" + category + "`"
-	rows, err := h.db.Query(query)
+	newsList, err := h.newRepository.GetNewsByCategory(category)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to retrieve news: " + err.Error()})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch news: " + err.Error()})
 		return
 	}
-	defer rows.Close()
-
-	var newsList []News
-	for rows.Next() {
-		var news News
-		if err := rows.Scan(&news.ID, &news.Link, &news.Title, &news.Content); err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to parse news: " + err.Error()})
-			return
-		}
-		newsList = append(newsList, news)
-	}
-
-	if err := rows.Err(); err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to process rows: " + err.Error()})
-		return
-	}
-
 	c.JSON(http.StatusOK, newsList)
 }
 
-// Create
 func (h *NewsHandler) AddNews(c *gin.Context) {
 	category := c.Param("category")
-	var news News
+	var news models.News
 	if err := c.ShouldBindJSON(&news); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid JSON: " + err.Error()})
 		return
 	}
 
-	query := "INSERT INTO `" + category + "` (id, link, title, content) VALUES (?, ?, ?, ?)"
-	_, err := h.db.Exec(query, news.ID, news.Link, news.Title, news.Content)
+	err := h.newRepository.AddNews(category, news)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to insert news: " + err.Error()})
 		return
@@ -71,58 +46,44 @@ func (h *NewsHandler) AddNews(c *gin.Context) {
 	c.JSON(http.StatusCreated, news)
 }
 
-// Update
 func (h *NewsHandler) UpdateNews(c *gin.Context) {
 	category := c.Param("category")
-	var news News
+	idParam := c.Param("id")
+	id, err := strconv.Atoi(idParam)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid ID: " + idParam})
+		return
+	}
+
+	var news models.News
 	if err := c.ShouldBindJSON(&news); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid JSON: " + err.Error()})
 		return
 	}
 
-	query := "UPDATE `" + category + "` SET link = ?, title = ?, content = ? WHERE id = ?"
-	result, err := h.db.Exec(query, news.Link, news.Title, news.Content, news.ID)
+	err = h.newRepository.UpdateNews(category, id, news)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update news: " + err.Error()})
-		return
-	}
-
-	rowsAffected, err := result.RowsAffected()
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to retrieve rows affected: " + err.Error()})
-		return
-	}
-
-	if rowsAffected == 0 {
-		c.JSON(http.StatusNotFound, gin.H{"error": "News not found"})
 		return
 	}
 
 	c.JSON(http.StatusOK, news)
 }
 
-// Delete
 func (h *NewsHandler) DeleteNews(c *gin.Context) {
 	category := c.Param("category")
-	id := c.Param("id")
+	idParam := c.Param("id")
+	id, err := strconv.Atoi(idParam)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid ID: " + idParam})
+		return
+	}
 
-	query := "DELETE FROM `" + category + "` WHERE id = ?"
-	result, err := h.db.Exec(query, id)
+	err = h.newRepository.DeleteNews(category, id)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to delete news: " + err.Error()})
 		return
 	}
 
-	rowsAffected, err := result.RowsAffected()
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to retrieve rows affected: " + err.Error()})
-		return
-	}
-
-	if rowsAffected == 0 {
-		c.JSON(http.StatusNotFound, gin.H{"error": "News not found"})
-		return
-	}
-
-	c.JSON(http.StatusOK, gin.H{"message": "News deleted"})
+	c.JSON(http.StatusOK, gin.H{"message": "News deleted successfully"})
 }

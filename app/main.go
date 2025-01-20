@@ -3,6 +3,7 @@ package main
 import (
 	"app/db"
 	"app/handler"
+	"app/repository"
 	"log"
 
 	"github.com/gin-gonic/gin"
@@ -16,8 +17,9 @@ func main() {
 	}
 	defer database.Close()
 
-	// handler := new(handler.NewsHandler)
-	handler := handler.NewNewsHandler(database)
+	newRepository := repository.NewNewRepository(database)
+	handler := handler.NewNewsHandler(newRepository)
+
 	router := gin.Default()
 
 	newsRoutes := router.Group("/news")

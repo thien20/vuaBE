@@ -10,8 +10,6 @@ import (
 	"github.com/joho/godotenv"
 )
 
-// var DB *sql.DB
-
 func InitDB() (*sql.DB, error) {
 
 	// dsn := "root:admin123@tcp(localhost:3306)/news"
