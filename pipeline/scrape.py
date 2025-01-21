@@ -4,10 +4,14 @@ import requests
 import json
 import os
 
+global_id = 0 
+
 def process_p_contents(p_contents):
     return " ".join(p_contents)
 
 def scrape_data_by_cate(url):
+    global global_id
+    
     # Fetch and parse the main category page
     response = requests.get(url)
     if response.status_code != 200:
@@ -21,7 +25,6 @@ def scrape_data_by_cate(url):
     # Store the scraped data
     scraped_data = []
 
-    id = 0
     for tag in h3_tags:
         a_tag = tag.find('a')
         if a_tag:
@@ -44,17 +47,18 @@ def scrape_data_by_cate(url):
                 content = process_p_contents(p_contents)
 
                 scraped_data.append({
-                    'id': id,
+                    'id': global_id,
                     'link': link,
                     'title': title,
-                    'content': content
+                    'content': content,
+                    'category': url.split('/')[-1].replace('-', '_')
                 })
-                id += 1
+                global_id += 1
 
             except Exception as e:
                 print(f"Error fetching or parsing linked page: {link}, Error: {e}")
                 continue
-
+       
     return scraped_data
 
 if __name__ == '__main__':
@@ -71,9 +75,13 @@ if __name__ == '__main__':
     url_list = [original_url + cate for cate in categories]    
     categories = [cate.split('/')[-1] for cate in categories] # truncate '\' for matching folder name
     
+    all_data = []
     for i, temp_url in enumerate(url_list):
         data = scrape_data_by_cate(temp_url)
-        with open(f"{data_dir}\data_{categories[i]}.json", 'w', encoding='utf-8') as f:
-            json.dump(data, f, ensure_ascii=False, indent=2)
+        all_data.extend(data)
         print("Done scraping data for category:", temp_url)
+    
+    with open(f"{data_dir}/all_data.json", 'w', encoding='utf-8') as f:
+        json.dump(all_data, f, ensure_ascii=False, indent=2)
+    
     print("Done scraping data for all categories")
