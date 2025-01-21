@@ -2,8 +2,9 @@ package repository
 
 import (
 	"app/models"
-	"database/sql"
 	"errors"
+
+	"gorm.io/gorm"
 )
 
 // ALL THE REF / DATA OBJECTS ARE TRANSFERRED TO THE REPOSITORY TO HANDLE
@@ -11,48 +12,45 @@ import (
 type NewRepositoryInterface interface {
 	// GetNewsByCategory(category string) models.News
 	GetNewsByCategory(category string) ([]models.News, error)
-	AddNews(category string, news models.News) error
+	AddNews(news models.News) error
 	UpdateNews(category string, id int, news models.News) error
 	DeleteNews(category string, id int) error
 }
 
 type newRepository struct {
-	db *sql.DB
+	db *gorm.DB
 }
 
-func NewNewRepository(db *sql.DB) *newRepository {
+func NewNewRepository(db *gorm.DB) *newRepository {
 	return &newRepository{db: db}
 }
 
 // Read - GET
 func (n *newRepository) GetNewsByCategory(category string) ([]models.News, error) {
-	query := "SELECT id, link, title, content FROM `" + category + "`"
-	rows, err := n.db.Query(query)
+
+	var News []models.News
+	err := n.db.Find(&News).Error
 	if err != nil {
 		return nil, err
 	}
-	defer rows.Close()
-
 	var newsList []models.News
-	for rows.Next() {
-		var news models.News
-		if err := rows.Scan(&news.ID, &news.Link, &news.Title, &news.Content); err != nil {
-			return nil, err
+	for _, news := range News {
+		if news.Category == category {
+			newsList = append(newsList, news)
 		}
-		newsList = append(newsList, news)
 	}
 
-	if err := rows.Err(); err != nil {
-		return nil, err
+	if len(newsList) == 0 {
+		return nil, errors.New("no news found for the given category")
 	}
 
 	return newsList, nil
 }
 
 // Create - POST
-func (n *newRepository) AddNews(category string, news models.News) error {
-	query := "INSERT INTO `" + category + "` (id, link, title, content) VALUES (?, ?, ?, ?)"
-	_, err := n.db.Exec(query, news.ID, news.Link, news.Title, news.Content)
+func (n *newRepository) AddNews(news models.News) error {
+
+	err := n.db.Create(&news).Error
 	if err != nil {
 		return err
 	}
@@ -61,20 +59,18 @@ func (n *newRepository) AddNews(category string, news models.News) error {
 }
 
 // Update - PUT
-func (n *newRepository) UpdateNews(category string, id int, news models.News) error {
-	query := "UPDATE `" + category + "` SET link = ?, title = ?, content = ? WHERE id = ?"
-	result, err := n.db.Exec(query, news.Link, news.Title, news.Content, id)
+func (n *newRepository) UpdateNews(category string, id int, newstoUpdate models.News) error {
+
+	// Check if the news exists
+	err := n.db.Where("category = ? AND id = ?", category, id).First(&newstoUpdate).Error
 	if err != nil {
 		return err
 	}
 
-	rowsAffected, err := result.RowsAffected()
+	// Update the news
+	err = n.db.Model(&newstoUpdate).Updates(newstoUpdate).Error
 	if err != nil {
 		return err
-	}
-
-	if rowsAffected == 0 {
-		return errors.New("no rows updated")
 	}
 
 	return nil
@@ -82,20 +78,11 @@ func (n *newRepository) UpdateNews(category string, id int, news models.News) er
 
 // Delete - DELETE
 func (n *newRepository) DeleteNews(category string, id int) error {
-	query := "DELETE FROM `" + category + "` WHERE id = ?"
-	result, err := n.db.Exec(query, id)
+
+	var news models.News
+	err := n.db.Where("category = ? AND id = ?", category, id).Delete(&news).Error
 	if err != nil {
 		return err
 	}
-
-	rowsAffected, err := result.RowsAffected()
-	if err != nil {
-		return err
-	}
-
-	if rowsAffected == 0 {
-		return errors.New("no rows deleted")
-	}
-
 	return nil
 }

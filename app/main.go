@@ -15,7 +15,6 @@ func main() {
 	if err != nil {
 		log.Fatalf("Failed to connect database: %v", err)
 	}
-	defer database.Close()
 
 	newRepository := repository.NewNewRepository(database)
 	handler := handler.NewNewsHandler(newRepository)

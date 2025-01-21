@@ -1,16 +1,18 @@
 package db
 
 import (
-	"database/sql"
 	"log"
 	"os"
 	"path/filepath"
+
+	"gorm.io/driver/mysql"
+	"gorm.io/gorm"
 
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/joho/godotenv"
 )
 
-func InitDB() (*sql.DB, error) {
+func InitDB() (*gorm.DB, error) {
 
 	// dsn := "root:admin123@tcp(localhost:3306)/news"
 	envPath := filepath.Join("..", ".env")
@@ -27,34 +29,11 @@ func InitDB() (*sql.DB, error) {
 
 	dsn := dbUser + ":" + dbPassword + "@tcp(" + dbHost + ":" + dbPort + ")/" + dbName
 
-	db, err := sql.Open("mysql", dsn)
+	// db, err := sql.Open("mysql", dsn)
+	db, err := gorm.Open(mysql.Open(dsn), &gorm.Config{})
 	if err != nil {
 		return nil, err
 	}
-
-	if err = db.Ping(); err != nil {
-		return nil, err
-	}
-
-	// Check if the database is connected
-	// rows, err := db.Query("SELECT id, title FROM the_gioi LIMIT 1")
-	// if err != nil {
-	// 	return nil, err
-	// }
-	// defer rows.Close()
-
-	// var id int
-	// var title string
-
-	// if rows.Next() {
-	// 	err = rows.Scan(&id, &title)
-	// 	if err != nil {
-	// 		return nil, err
-	// 	}
-	// 	log.Printf("Fetched article: ID=%d, Title=%s", id, title)
-	// } else {
-	// 	log.Println("No articles found")
-	// }
 
 	log.Println("Database connected!")
 	return db, nil

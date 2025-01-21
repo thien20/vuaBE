@@ -16,7 +16,9 @@ type NewsHandler struct {
 }
 
 func NewNewsHandler(newRepository repository.NewRepositoryInterface) *NewsHandler {
-	return &NewsHandler{newRepository: newRepository}
+	return &NewsHandler{
+		newRepository: newRepository,
+	}
 }
 
 func (h *NewsHandler) GetNewsByCategory(c *gin.Context) {
@@ -30,14 +32,13 @@ func (h *NewsHandler) GetNewsByCategory(c *gin.Context) {
 }
 
 func (h *NewsHandler) AddNews(c *gin.Context) {
-	category := c.Param("category")
 	var news models.News
 	if err := c.ShouldBindJSON(&news); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid JSON: " + err.Error()})
 		return
 	}
 
-	err := h.newRepository.AddNews(category, news)
+	err := h.newRepository.AddNews(news)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to insert news: " + err.Error()})
 		return
@@ -49,33 +50,31 @@ func (h *NewsHandler) AddNews(c *gin.Context) {
 func (h *NewsHandler) UpdateNews(c *gin.Context) {
 	category := c.Param("category")
 	idParam := c.Param("id")
+	// The param take the id as string, so we need to convert it to int
 	id, err := strconv.Atoi(idParam)
-	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid ID: " + idParam})
-		return
-	}
 
-	var news models.News
-	if err := c.ShouldBindJSON(&news); err != nil {
+	var newstoUpdate models.News
+	if err := c.ShouldBindJSON(&newstoUpdate); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid JSON: " + err.Error()})
 		return
 	}
 
-	err = h.newRepository.UpdateNews(category, id, news)
+	err = h.newRepository.UpdateNews(category, id, newstoUpdate)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update news: " + err.Error()})
 		return
 	}
 
-	c.JSON(http.StatusOK, news)
+	c.JSON(http.StatusOK, gin.H{"message": "News updated successfully"})
 }
 
 func (h *NewsHandler) DeleteNews(c *gin.Context) {
 	category := c.Param("category")
 	idParam := c.Param("id")
 	id, err := strconv.Atoi(idParam)
+
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid ID: " + idParam})
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid ID: " + err.Error()})
 		return
 	}
 
