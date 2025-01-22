@@ -8,6 +8,8 @@ import (
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
 
+	"app/models"
+
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/joho/godotenv"
 )
@@ -35,6 +37,13 @@ func InitDB() (*gorm.DB, error) {
 		return nil, err
 	}
 
-	log.Println("Database connected!")
+	// Auto migrate models
+	err = db.AutoMigrate(&models.News{})
+	if err != nil {
+		return nil, err
+	}
+
+	log.Println("Database connected and auto migration completed!")
+	// The returned `db` will include all tables within a DB
 	return db, nil
 }

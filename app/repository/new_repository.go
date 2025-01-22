@@ -29,7 +29,8 @@ func NewNewRepository(db *gorm.DB) *newRepository {
 func (n *newRepository) GetNewsByCategory(category string) ([]models.News, error) {
 
 	var News []models.News
-	err := n.db.Find(&News).Error
+	// err := n.db.Find(&News).Error
+	err := n.db.Where("category = ?", category).Find(&News).Error
 	if err != nil {
 		return nil, err
 	}
@@ -61,14 +62,8 @@ func (n *newRepository) AddNews(news models.News) error {
 // Update - PUT
 func (n *newRepository) UpdateNews(category string, id int, newstoUpdate models.News) error {
 
-	// Check if the news exists
-	err := n.db.Where("category = ? AND id = ?", category, id).First(&newstoUpdate).Error
-	if err != nil {
-		return err
-	}
-
 	// Update the news
-	err = n.db.Model(&newstoUpdate).Updates(newstoUpdate).Error
+	err := n.db.Model(&newstoUpdate).Updates(newstoUpdate).Error
 	if err != nil {
 		return err
 	}
