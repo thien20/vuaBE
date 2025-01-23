@@ -18,6 +18,7 @@
 -- CREATE TABLE IF NOT EXISTS the_gioi (ID INT, link TEXT, title TEXT, content TEXT);
 -- CREATE TABLE IF NOT EXISTS goc_nhin (ID INT, link TEXT, title TEXT, content TEXT);
 
-CREATE TABLE IF NOT EXISTS News (ID INT, link TEXT, title TEXT, content TEXT, category TEXT);
+-- gorm -> lower(snakes)
+CREATE TABLE IF NOT EXISTS news (id INT, link TEXT, title TEXT, content TEXT, category TEXT);
 CREATE TABLE IF NOT EXISTS category (category_id INT, category_name TEXT);
-CREATE TABLE IF NOT EXISTS News_Category (category_id INT, news_id INT);
+CREATE TABLE IF NOT EXISTS news_categories (category_id INT, news_id INT);

@@ -1,4 +1,4 @@
-package db
+package infra
 
 import (
 	"log"
@@ -7,8 +7,6 @@ import (
 
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
-
-	"app/models"
 
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/joho/godotenv"
@@ -31,14 +29,7 @@ func InitDB() (*gorm.DB, error) {
 
 	dsn := dbUser + ":" + dbPassword + "@tcp(" + dbHost + ":" + dbPort + ")/" + dbName
 
-	// db, err := sql.Open("mysql", dsn)
 	db, err := gorm.Open(mysql.Open(dsn), &gorm.Config{})
-	if err != nil {
-		return nil, err
-	}
-
-	// Auto migrate models
-	err = db.AutoMigrate(&models.News{})
 	if err != nil {
 		return nil, err
 	}

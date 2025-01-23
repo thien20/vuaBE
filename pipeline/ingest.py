@@ -31,7 +31,7 @@ data_dir = r'D:\MY_FOLDER\Project\vuaBE\data'
 #     exit(1)
 
 # tables = [os.path.basename(file).replace('data_', '').replace('.json', '').replace('-', '_') for file in json_files]
-table = 'News'
+table = 'news'
 
 
 # json_files.sort()
