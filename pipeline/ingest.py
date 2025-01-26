@@ -23,19 +23,11 @@ except mysql.connector.Error as e:
     exit(1)
 
 # Data files
-data_dir = r'D:\MY_FOLDER\Project\vuaBE\data'
-# json_files = [f for f in os.listdir(data_dir) if os.path.isfile(os.path.join(data_dir, f))]
+# data_dir = r'D:\MY_FOLDER\Project\vuaBE\data'
+data_dir = r'./data'
 
-# if not json_files:
-#     print(f"No JSON files found in the directory: {data_dir}")
-#     exit(1)
-
-# tables = [os.path.basename(file).replace('data_', '').replace('.json', '').replace('-', '_') for file in json_files]
 table = 'news'
 
-
-# json_files.sort()
-# tables.sort()
 with open(os.path.join(data_dir, 'all_data.json'), 'r', encoding='utf-8') as f:
     data = json.load(f)
     records_to_insert = []
