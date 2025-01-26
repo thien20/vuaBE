@@ -1,7 +1,8 @@
 package handler
 
 import (
-	"app/models"
+	"app/internal/cache"
+	"app/internal/models"
 	"app/repository"
 	"net/http"
 	"strconv"
@@ -13,11 +14,14 @@ import (
 
 type NewsHandler struct {
 	newRepository repository.NewRepositoryInterface
+	cache         *cache.Cache
 }
 
-func NewNewsHandler(newRepository repository.NewRepositoryInterface) *NewsHandler {
+func NewNewsHandler(newRepository repository.NewRepositoryInterface,
+	cache *cache.Cache) *NewsHandler {
 	return &NewsHandler{
 		newRepository: newRepository,
+		cache:         cache,
 	}
 }
 
@@ -52,6 +56,10 @@ func (h *NewsHandler) UpdateNews(c *gin.Context) {
 	idParam := c.Param("id")
 	// The param take the id as string, so we need to convert it to int
 	id, err := strconv.Atoi(idParam)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid ID: " + err.Error()})
+		return
+	}
 
 	var newstoUpdate models.News
 	if err := c.ShouldBindJSON(&newstoUpdate); err != nil {

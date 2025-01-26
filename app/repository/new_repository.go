@@ -29,7 +29,6 @@ func NewNewRepository(db *gorm.DB) *newRepository {
 func (n *newRepository) GetNewsByCategory(category string) ([]models.News, error) {
 
 	var News []models.News
-	// err := n.db.Find(&News).Error
 	err := n.db.Where("category = ?", category).Find(&News).Error
 	if err != nil {
 		return nil, err

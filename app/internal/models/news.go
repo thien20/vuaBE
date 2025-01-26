@@ -2,6 +2,7 @@ package models
 
 // GO: CamelCase, file -> snake_case
 type News struct {
+	// gorm.Model
 	ID       int    `json:"id"`
 	Link     string `json:"link"`
 	Title    string `json:"title"`

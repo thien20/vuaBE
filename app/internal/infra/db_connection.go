@@ -2,39 +2,34 @@ package infra
 
 import (
 	"log"
-	"os"
-	"path/filepath"
 
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
+	"gorm.io/gorm/logger"
 
 	_ "github.com/go-sql-driver/mysql"
-	"github.com/joho/godotenv"
 )
 
-func InitDB() (*gorm.DB, error) {
+func InitDB(conStr string) *gorm.DB {
 
-	// dsn := "root:admin123@tcp(localhost:3306)/news"
-	envPath := filepath.Join("..", ".env")
-	err := godotenv.Load(envPath)
+	// This is for local machine
+	// "db": "root:admin123@tcp(db:3306)/vnexpress"
+	// This is for docker
+	// "db": "root:admin123@tcp(locahost:3306)/vnexpress"
+
+	log.Println("Connecting to:", conStr)
+	gormDB, err := gorm.Open(mysql.Open(conStr), &gorm.Config{
+		Logger: logger.Default.LogMode(logger.Info),
+	})
 	if err != nil {
-		log.Println("Error loading .env file.")
+		panic(err)
 	}
+	// Take 1 value from `news` table
+	// var news models.News
+	// gormDB.First(&news)
+	// log.Println("First news: ", news)
 
-	dbUser := os.Getenv("DB_USER")
-	dbPassword := os.Getenv("DB_PASSWORD")
-	dbHost := os.Getenv("DB_HOST")
-	dbName := os.Getenv("DB_NAME")
-	dbPort := os.Getenv("DB_PORT")
-
-	dsn := dbUser + ":" + dbPassword + "@tcp(" + dbHost + ":" + dbPort + ")/" + dbName
-
-	db, err := gorm.Open(mysql.Open(dsn), &gorm.Config{})
-	if err != nil {
-		return nil, err
-	}
-
-	log.Println("Database connected and auto migration completed!")
+	log.Println("Database connected")
 	// The returned `db` will include all tables within a DB
-	return db, nil
+	return gormDB
 }
