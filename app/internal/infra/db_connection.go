@@ -24,10 +24,6 @@ func InitDB(conStr string) *gorm.DB {
 	if err != nil {
 		panic(err)
 	}
-	// Take 1 value from `news` table
-	// var news models.News
-	// gormDB.First(&news)
-	// log.Println("First news: ", news)
 
 	log.Println("Database connected")
 	// The returned `db` will include all tables within a DB

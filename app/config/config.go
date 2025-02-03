@@ -9,7 +9,8 @@ import (
 )
 
 type Config struct {
-	DB string `json:"db"`
+	DB    string `json:"db"`
+	Redis string `json:"redis"`
 }
 
 func ReadConfigAndArg() *Config {

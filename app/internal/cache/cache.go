@@ -1,7 +1,6 @@
 package cache
 
 import (
-	"app/config"
 	"context"
 	"fmt"
 	"time"
@@ -15,14 +14,6 @@ type Cache struct {
 
 func NewCacheFromClient(redisClient *redis.Client) *Cache {
 	return &Cache{client: redisClient}
-}
-
-func NewCache() (*Cache, error) {
-	client, err := config.NewRedis()
-	if err != nil {
-		return nil, err
-	}
-	return &Cache{client: client}, nil
 }
 
 // Set stores a key-value pair in Redis with an optional expiration time
@@ -45,4 +36,13 @@ func (c *Cache) GetCache(key string) (string, error) {
 		return "", fmt.Errorf("failed to get key %s: %w", key, err)
 	}
 	return value, nil
+}
+
+func (c *Cache) DeleteCache(key string) error {
+	ctx := context.Background()
+	err := c.client.Del(ctx, key).Err()
+	if err != nil {
+		return fmt.Errorf("failed to delete key %s: %w", key, err)
+	}
+	return nil
 }

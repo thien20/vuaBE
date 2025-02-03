@@ -2,12 +2,11 @@ package repository
 
 import (
 	"app/internal/models"
-	"errors"
 
 	"gorm.io/gorm"
 )
 
-// ALL THE REF / DATA OBJECTS ARE TRANSFERRED TO THE REPOSITORY TO HANDLE
+// ALL THE REF / DATA OBJECTS ARE TRANSFERED TO THE REPOSITORY TO HANDLE
 
 type NewRepositoryInterface interface {
 	// GetNewsByCategory(category string) models.News
@@ -33,18 +32,8 @@ func (n *newRepository) GetNewsByCategory(category string) ([]models.News, error
 	if err != nil {
 		return nil, err
 	}
-	var newsList []models.News
-	for _, news := range News {
-		if news.Category == category {
-			newsList = append(newsList, news)
-		}
-	}
 
-	if len(newsList) == 0 {
-		return nil, errors.New("no news found for the given category")
-	}
-
-	return newsList, nil
+	return News, nil
 }
 
 // Create - POST

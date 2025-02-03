@@ -4,6 +4,8 @@ import (
 	"app/internal/cache"
 	"app/internal/models"
 	"app/repository"
+	"encoding/json"
+	"log"
 	"net/http"
 	"strconv"
 
@@ -27,11 +29,39 @@ func NewNewsHandler(newRepository repository.NewRepositoryInterface,
 
 func (h *NewsHandler) GetNewsByCategory(c *gin.Context) {
 	category := c.Param("category")
+	// cacheKey := "news:" + category
+
+	// Check if the data is in cache
+	cachedValue, err := h.cache.GetCache(category)
+	if err == nil {
+		log.Println("Cache hit for category:", category)
+		c.JSON(http.StatusOK, cachedValue)
+		return
+	}
+
+	// If not in cache, fetch from database
+	log.Println("Cache miss for category:", category)
+
 	newsList, err := h.newRepository.GetNewsByCategory(category)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch news: " + err.Error()})
 		return
 	}
+
+	// Convert newsList to JSON
+	newsListJSON, err := json.Marshal(newsList)
+	if err != nil {
+		log.Println("Failed to marshal newsList for category:", category)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to process news data"})
+		return
+	}
+
+	// Cache the data
+	err = h.cache.SetCache(category, newsListJSON, 10000000000)
+	if err != nil {
+		log.Println("Failed to cache data for category:", category)
+	}
+
 	c.JSON(http.StatusOK, newsList)
 }
 
@@ -46,6 +76,12 @@ func (h *NewsHandler) AddNews(c *gin.Context) {
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to insert news: " + err.Error()})
 		return
+	}
+
+	// Invalidate cache for the category
+	err = h.cache.DeleteCache(news.Category)
+	if err != nil {
+		log.Println("Failed to invalidate cache for category:", news.Category)
 	}
 
 	c.JSON(http.StatusCreated, news)
@@ -73,6 +109,12 @@ func (h *NewsHandler) UpdateNews(c *gin.Context) {
 		return
 	}
 
+	// Invalidate cache for the category
+	err = h.cache.DeleteCache(category)
+	if err != nil {
+		log.Println("Failed to invalidate cache for category:", category)
+	}
+
 	c.JSON(http.StatusOK, gin.H{"message": "News updated successfully"})
 }
 
@@ -90,6 +132,12 @@ func (h *NewsHandler) DeleteNews(c *gin.Context) {
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to delete news: " + err.Error()})
 		return
+	}
+
+	// Invalidate cache for the category
+	err = h.cache.DeleteCache(category)
+	if err != nil {
+		log.Println("Failed to invalidate cache for category:", category)
 	}
 
 	c.JSON(http.StatusOK, gin.H{"message": "News deleted successfully"})

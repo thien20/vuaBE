@@ -22,21 +22,8 @@ func main() {
 	}
 
 	// Redis initialization
-	redisClient, err := config.NewRedis()
-	if err != nil {
-		log.Fatalf("Failed to connect to Redis: %v", err)
-	}
+	redisClient := config.NewRedis(cfg.Redis)
 	redisCache := cache.NewCacheFromClient(redisClient)
-
-	err = redisCache.SetCache("the_gioi", "The gioi", 0)
-	if err != nil {
-		log.Fatalf("Failed to set value to Redis: %v", err)
-	}
-	cachedValue, err := redisCache.GetCache("the_gioi")
-	if err != nil {
-		log.Fatalf("Failed to get value from Redis: %v", err)
-	}
-	log.Println("Cached value: ", cachedValue)
 
 	// Repository and handler initialization
 	newRepository := repository.NewNewRepository(database)

@@ -1,61 +1,24 @@
 package config
 
 import (
-	"context"
 	"log"
 
 	"github.com/redis/go-redis/v9"
 )
 
-// type client struct {
-// 	redisClient *redis.Client
-// }
+func NewRedis(conStr string) *redis.Client {
 
-func NewRedis() (*redis.Client, error) {
-	ctx := context.Background()
-	// Connect to Redis
-	client := redis.NewClient(&redis.Options{
-		Addr:     "redis:6379", // use default Addr
-		Password: "",           // no password set
-		DB:       0,            // use default DB
-	})
-	// client := redis.NewClient(&redis.Options{
-	// 	Addr:     "localhost:6379", // use default Addr
-	// 	Password: "",               // no password set
-	// 	DB:       0,                // use default DB
-	// })
-	// // another way to connect to Redis
-	// opt, err := redis.ParseURL("redis://<user>:<pass>@localhost:6379/<db>")
-	// if err != nil {
-	// 	panic(err)
-	// }
+	// This is for local machine
+	// "redis": "localhost:6379" or	redis://<user>:<pass>@localhost:6379/<db>
+	// This is for docker
+	// redis://<user>:<pass>@reids:6379/<db>
 
-	_, err := client.Ping(ctx).Result()
+	opt, err := redis.ParseURL(conStr)
 	if err != nil {
-		log.Println("Failed to connect to Redis: ", err.Error())
+		panic(err)
 	}
-	return client, nil
+	log.Println("Connecting to Redis:", conStr)
+	client := redis.NewClient(opt)
+
+	return client
 }
-
-// // Get title / id from news with Redis
-// func (c *client) GetCate(category string) error {
-// 	ctx := context.Background()
-
-// 	category, err := c.redisClient.Get(ctx, category).Result()
-// 	if err != nil {
-// 		return err
-// 	}
-// 	log.Println("Category: ", category)
-// 	return nil
-// }
-
-// // Set title / id from news with Redis
-// func (c *client) SetCate(category string) error {
-// 	ctx := context.Background()
-
-// 	err := c.redisClient.Set(ctx, "the_gioi", category, 0).Err()
-// 	if err != nil {
-// 		return err
-// 	}
-// 	return nil
-// }
