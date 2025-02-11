@@ -25,18 +25,31 @@ func main() {
 	redisClient := config.NewRedis(cfg.Redis)
 	redisCache := cache.NewCacheFromClient(redisClient)
 
-	// Repository and handler initialization
+	// News handler initialization
 	newRepository := repository.NewNewRepository(database)
-	handler := handler.NewNewsHandler(newRepository, redisCache)
+	newHandler := handler.NewNewsHandler(newRepository, redisCache)
+
+	// Job handler initialization
+	jobRepository := repository.NewJobRepository(database)
+	jobHandler := handler.NewJobHandler(jobRepository, redisCache)
 
 	router := gin.Default()
 
+	// API for news
 	newsRoutes := router.Group("/news")
 	{
-		newsRoutes.GET("/:category", handler.GetNewsByCategory)
-		newsRoutes.POST("/:category", handler.AddNews)
-		newsRoutes.PUT("/:category/:id", handler.UpdateNews)
-		newsRoutes.DELETE("/:category/:id", handler.DeleteNews)
+		newsRoutes.GET("/:category", newHandler.GetNewsByCategory)
+		newsRoutes.POST("/:category", newHandler.AddNews)
+		newsRoutes.PUT("/:category/:id", newHandler.UpdateNews)
+		newsRoutes.DELETE("/:category/:id", newHandler.DeleteNews)
+	}
+
+	// API for jobs
+	jobRoutes := router.Group("/jobs")
+	{
+		jobRoutes.POST("/fetch/:topic", jobHandler.FetchJobs)
+		jobRoutes.GET("/ping/:id", jobHandler.CheckStatus)
+		jobRoutes.GET("/result/:category", jobHandler.GetResult)
 	}
 
 	// router.Run("8080:8080")
