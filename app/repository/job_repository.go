@@ -14,29 +14,29 @@ type JobRepositoryInterface interface {
 }
 
 type JobRepository struct {
-	db *gorm.DB
+	producer kafka.ProducerRepositoryInterface
+	db       *gorm.DB
 }
 
-func NewJobRepository(db *gorm.DB) *JobRepository {
-	return &JobRepository{db: db}
+func NewJobRepository(db *gorm.DB, producer kafka.ProducerRepositoryInterface) *JobRepository {
+	return &JobRepository{
+		db:       db,
+		producer: producer,
+	}
 }
 
 func (j *JobRepository) FetchJobs(topic string, action string) ([]models.Jobs, error) {
 	// Initialize the producer
 	key := "Scrape-Key"
+	// action = "Scrape-Action"
 	id := 1
-	producer, err := kafka.NewProducer(topic)
-	if err != nil {
-		return nil, err
-	}
 
 	// Produce the message
-	err = producer.ProduceMessage(id, key, action)
-	if err != nil {
+	if err := j.producer.ProduceMessage(id, key, action); err != nil {
 		return nil, err
 	}
 
-	err = j.db.Create(&models.Jobs{
+	err := j.db.Create(&models.Jobs{
 		Status: "pending"}).Error
 	if err != nil {
 		return nil, err

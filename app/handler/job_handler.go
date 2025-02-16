@@ -40,7 +40,7 @@ func (h *JobHandler) FetchJobs(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{"message": "Jobs fetched successfully"})
+	c.JSON(http.StatusAccepted, gin.H{"message": "Jobs fetched successfully"})
 	return
 }
 

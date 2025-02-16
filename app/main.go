@@ -5,6 +5,7 @@ import (
 	"app/handler"
 	"app/internal/cache"
 	"app/internal/infra"
+	"app/internal/kafka"
 	"app/migration"
 	"app/repository"
 	"log"
@@ -30,7 +31,8 @@ func main() {
 	newHandler := handler.NewNewsHandler(newRepository, redisCache)
 
 	// Job handler initialization
-	jobRepository := repository.NewJobRepository(database)
+	producer := kafka.NewKafkaProducer("scrape-news", 0) // default topic and partition - we can custom it later
+	jobRepository := repository.NewJobRepository(database, producer)
 	jobHandler := handler.NewJobHandler(jobRepository, redisCache)
 
 	router := gin.Default()
