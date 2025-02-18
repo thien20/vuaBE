@@ -7,7 +7,6 @@ import json
 from scrape import *
 from kafka import KafkaConsumer
 from utils.db_inserting import save_to_database, update_job_status
-# from cache.cache import save_to_cache
 
 
 def consume_kafka_messages():
@@ -45,6 +44,8 @@ def consume_kafka_messages():
         # elif action == 'ingest':
         #     ingest()
         
-        
+# cd app --> `dlv debug --check-go-version=false main.go
+# source simplebe/bin/activate --> python3 -m debugpy --listen 5678  /mnt/d/MY_FOLDER/Project/vuaBE/pipeline/consumer.py
+# curl -X POST curl http://0.0.0.0:8080/jobs/fetch/scrape
 if __name__ == '__main__':
     consume_kafka_messages()
