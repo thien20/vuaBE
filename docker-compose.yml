@@ -4,14 +4,12 @@ services:
     restart: always
     environment:
       MYSQL_DATABASE: 'vnexpress'
-      # MYSQL_DATABASE: 'news'
       MYSQL_ROOT_PASSWORD: 'admin123'
     ports:
       - "3306:3306"
     volumes:
       - db_data:/var/lib/mysql
     healthcheck:
-      # test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
       test: ["CMD", "mysqladmin", "ping", "-h", "db", "-u", "root", "-padmin123"]
       interval: 10s
       timeout: 5s
@@ -27,33 +25,50 @@ services:
       timeout: 5s
       retries: 3
 
-  # go-app:
-  #   build:
-  #     context: ./app
-  #     dockerfile: Dockerfile
-  #   depends_on:
-  #     db:
-  #       condition: service_healthy
-  #     redis:
-  #       condition: service_healthy
-  #   ports:
-  #     - "8080:8080"
-  #   environment:
-  #     DB_USER: 'root'
-  #     DB_PASSWORD: 'admin123'
-  #     DB_HOST: 'db'
-  #     # DB_NAME: 'news'
-  #     DB_NAME: 'vnexpress'
-  #     REDIS_HOST: 'redis'
-  #     REDIS_PORT: '6379'
+  go-app:
+    build:
+      context: ./app
+      dockerfile: Dockerfile
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    ports:
+      - "8080:8080"
+    environment:
+      DB_USER: 'root'
+      DB_PASSWORD: 'admin123'
+      DB_HOST: 'db'
+      DB_NAME: 'vnexpress'
+      REDIS_HOST: 'redis'
+      REDIS_PORT: '6379'
 
-  # db-tool:
-  #   image: dbeaver/cloudbeaver:latest
-  #   ports:
-  #     - "8081:8080"
-  #   environment:
-  #     CB_ADMIN_NAME: 'admin'
-  #     CB_ADMIN_PASSWORD: 'admin'
+  python-consumer:
+    build:
+      context: ./pipeline
+      dockerfile: Dockerfile
+    depends_on:
+      - kafka
+    environment:
+      KAFKA_BROKER: 'kafka:9092'
+
+  kafka:
+    image: confluentinc/cp-kafka:latest
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: "zookeeper:2181"
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+    ports:
+      - "9092:9092"
+    depends_on:
+      - zookeeper
+
+  zookeeper:
+    image: confluentinc/cp-zookeeper:latest
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
 
 volumes:
   db_data:
