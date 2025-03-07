@@ -1,0 +1,15 @@
+beautifulsoup4==4.12.3
+charset-normalizer==3.4.1
+confluent-kafka==2.8.0
+idna==3.10
+kafka-python==2.0.2
+mysql-connector-python==9.2.0
+pip==24.0
+python-dotenv==1.0.1
+requests==2.32.3
+soupsieve==2.6
+urllib3==2.3.0
+# redis==4.0.3
+debugpy
+apscheduler
+pytz
