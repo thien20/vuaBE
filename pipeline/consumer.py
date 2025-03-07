@@ -7,12 +7,13 @@ import json
 from scrape import *
 from kafka import KafkaConsumer
 from utils.db_inserting import save_to_database, update_job_status
-
+from utils.file_utils import write_json
 
 def consume_kafka_messages():
     consumer = KafkaConsumer(
         'scrape-news',
-        bootstrap_servers=['localhost:9092'],
+        # bootstrap_servers=['localhost:9092'], --> host machine
+        bootstrap_servers=['kafka:29092'], # --> docker container
         group_id='scrape-group',
         value_deserializer=lambda x: json.loads(x.decode('utf-8')) # convert bytes to dict
     )
@@ -34,8 +35,8 @@ def consume_kafka_messages():
             # Trigger the scraping process
             # data = scrape_all_categories()
             data = temp_data
-            with open('temp.json', 'w', encoding='utf-8') as f:
-                json.dump(data, f, ensure_ascii=False, indent=2)
+            write_json(data, 'temp.json')
+            
             save_to_database(job_id, data)
             # job_id = int(job_id)
             # save_to_cache(job_id, data)

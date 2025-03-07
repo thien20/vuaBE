@@ -8,7 +8,7 @@ from config import Config
 from utils.db_connection_utils import connect_to_db
 
 
-data_path = r"../vuaBE/app/config/config.json"
+data_path = "/app/config/config.json"
 db_config = Config(data_path).db_config
 
 def save_to_database(job_id, scraped_data):
@@ -21,16 +21,14 @@ def save_to_database(job_id, scraped_data):
         with connection.cursor() as cursor:
             records = []
             scraped_data = [scraped_data]
-            # print(type(scraped_data))
             for data in scraped_data:
-                job_id = int(data.get('job_id'))
-                category = data.get('category')
-                link = data.get('link')
-                title = data.get('title')
-                content = data.get('content')
-                scraped_at = data.get('scraped_at')
+                job_id      = int(data.get('job_id'))
+                category    = data.get('category')
+                link        = data.get('link')
+                title       = data.get('title')
+                content     = data.get('content')
+                scraped_at  = data.get('scraped_at')
                 records.append((job_id, category, link, title, content, scraped_at))
-            # cursor.executemany(f"""SHOW COLUMNS FROM {table}""")
             cursor.executemany(f"""
             INSERT INTO {table} (job_id, category, link, title, content, scraped_at)
             VALUES (%s, %s, %s, %s, %s, %s)
@@ -52,8 +50,6 @@ def update_job_status(job_id, status):
             cursor.executemany(f"""
             UPDATE {table} SET status = %s WHERE id = %s
             """, [(status, job_id)])
-            # sql = f"UPDATE {table} SET status = %s WHERE id = %s"
-            # cursor.execute(sql, (status, job_id))
         connection.commit()
         print(f"Successfully updated job {job_id} status to {status}")
     except Exception as e:

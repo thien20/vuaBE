@@ -9,6 +9,8 @@ COPY go.mod go.sum ./
 RUN go mod download
 
 COPY . .
+# COPY config/config.json /app/config/config.json
+
 
 # Build the Go app
 RUN go build -o main .
@@ -16,7 +18,7 @@ RUN go build -o main .
 # Stage 2: Runtime
 FROM alpine:latest
 
-WORKDIR /root/
+WORKDIR /app/
 
 # Copy the compiled binary from the builder stage
 COPY --from=builder /app/main .

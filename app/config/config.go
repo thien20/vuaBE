@@ -17,6 +17,7 @@ func ReadConfigAndArg() *Config {
 	_, b, _, _ := runtime.Caller(0)
 	basepath := filepath.Dir(b)
 	fileConfig := "config.json"
+	// log.Println("basepath: ", basepath+"/"+fileConfig)
 	data, err := os.ReadFile(basepath + "/" + fileConfig)
 	if err != nil {
 		log.Fatalln(err)
