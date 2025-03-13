@@ -1,7 +1,7 @@
 package repository
 
 import (
-	"app/internal/kafka"
+	"app/internal/infra/kafka"
 	"app/internal/models"
 
 	"gorm.io/gorm"

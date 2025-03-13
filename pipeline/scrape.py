@@ -4,7 +4,7 @@ import json
 from utils.file_utils import ensure_dir, read_json, write_json
 from utils.scrape_utils import scrape_data_by_cate
 
-def scrape_all_categories():
+def scrape_all_categories(job_id):
     original_url = 'https://vnexpress.net'
 
     # Define relative paths
@@ -12,7 +12,7 @@ def scrape_all_categories():
     # print("This is current dir", script_dir)
     data_dir = os.path.join(script_dir, 'data')
     # print("This is data dir", data_dir)
-    json_path = r'../vuaBE/vuacrawl.json'
+    json_path = r'./vuacrawl.json'
 
     # Ensure data directory exists
     ensure_dir(data_dir)
@@ -28,7 +28,7 @@ def scrape_all_categories():
 
     all_data = []
     for temp_url in url_list:
-        data = scrape_data_by_cate(temp_url)
+        data = scrape_data_by_cate(temp_url, job_id)
         all_data.extend(data)
         print("Done scraping data for category:", temp_url)
     

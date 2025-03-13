@@ -17,7 +17,7 @@ def parse_html(html, tag, class_name=None):
     soup = BeautifulSoup(html, 'html.parser')
     return soup.find_all(tag, class_=class_name)
 
-def scrape_data_by_cate(url):
+def scrape_data_by_cate(url, job_id):
     """Scrapes article links from a category page."""
     global global_id
     html_content = fetch_html(url)
@@ -36,6 +36,7 @@ def scrape_data_by_cate(url):
             content_data = scrape_article_content(link)
             if content_data:
                 scraped_data.append({
+                    'job_id': job_id,
                     'id': global_id,
                     'link': link,
                     'title': title,

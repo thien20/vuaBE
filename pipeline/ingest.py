@@ -7,7 +7,7 @@ import config
 from mysql.connector import connection
 
 
-db_config = config.Config("config.json").db_config
+db_config = config.Config("/app/config/config.json").db_config
 def ingest():
 
     # Connect to the database
@@ -20,8 +20,8 @@ def ingest():
         exit(1)
 
     # Data files
-    data_dir = r'./pipeline/data'
-
+    # data_dir = r'./pipeline/data'
+    data_dir = r'./data'
     table = 'news'
 
     with open(os.path.join(data_dir, 'all_data.json'), 'r', encoding='utf-8') as f:
