@@ -13,3 +13,4 @@ urllib3==2.3.0
 debugpy
 apscheduler
 pytz
+elasticsearch==8.0.0

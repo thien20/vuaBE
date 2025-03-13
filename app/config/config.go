@@ -9,8 +9,13 @@ import (
 )
 
 type Config struct {
-	DB    string `json:"db"`
-	Redis string `json:"redis"`
+	DB            string `json:"db"`
+	Redis         string `json:"redis"`
+	Kafka         string `json:"kafka"`
+	Elasticsearch struct {
+		Addresses []string `json:"addresses"`
+		IndexName string   `json:"index_name"`
+	} `json:"elasticsearch"`
 }
 
 func ReadConfigAndArg() *Config {

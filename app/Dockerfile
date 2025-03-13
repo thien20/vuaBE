@@ -1,30 +1,28 @@
 # Stage 1: Build
-FROM golang:1.23-alpine AS builder
+FROM golang:1.23 AS builder
 
-# Set the Current Working Directory inside the container
 WORKDIR /app
 
-# Copy go.mod and go.sum and download dependencies
 COPY go.mod go.sum ./
 RUN go mod download
 
 COPY . .
-# COPY config/config.json /app/config/config.json
 
+RUN apt-get update && apt-get install -y librdkafka-dev
 
-# Build the Go app
+ENV CGO_ENABLED=1
+
 RUN go build -o main .
 
 # Stage 2: Runtime
-FROM alpine:latest
+FROM debian:bookworm-slim
 
 WORKDIR /app/
 
-# Copy the compiled binary from the builder stage
+RUN apt-get update && apt-get install -y --no-install-recommends librdkafka1 ca-certificates && \
+    apt-get clean && rm -rf /var/lib/apt/lists/*
+
 COPY --from=builder /app/main .
 
-# Expose port 8080
 EXPOSE 8080
-
-# Run the application
 CMD ["./main"]

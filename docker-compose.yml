@@ -9,11 +9,14 @@ services:
       - "3306:3306"
     volumes:
       - db_data:/var/lib/mysql
+    command: --innodb-buffer-pool-size=128M
     healthcheck:
       test: ["CMD", "mysqladmin", "ping", "-h", "db", "-u", "root", "-padmin123"]
       interval: 10s
       timeout: 5s
       retries: 5
+    networks:
+      - app_network
 
   redis:
     image: redis:6.2
@@ -24,6 +27,8 @@ services:
       interval: 10s
       timeout: 5s
       retries: 3
+    networks:
+      - app_network
 
   go-app:
     build:
@@ -34,6 +39,8 @@ services:
         condition: service_healthy
       redis:
         condition: service_healthy
+      kafka:
+        condition: service_healthy
     ports:
       - "8080:8080"
     environment:
@@ -43,48 +50,79 @@ services:
       DB_NAME: 'vnexpress'
       REDIS_HOST: 'redis'
       REDIS_PORT: '6379'
+      KAFKA_BROKER: 'kafka:29092'
     volumes:
-      - /mnt/d/MY_FOLDER/Project/vuaBE/app/config/config.json:/app/config/config.json
+      # - /mnt/d/MY_FOLDER/Project/vuaBE/app/config/config.json:/app/config/config.json
+      - ./app/config/config.json:/app/config/config.json
+    networks:
+      - app_network
 
   python-consumer:
-    container_name: python-consumer
+    container_name: python
     build:
       context: ./pipeline
       dockerfile: Dockerfile
     depends_on:
       - kafka
     environment:
-      KAFKA_BROKER: 'kafka:9092'
+      KAFKA_BROKER: 'kafka:29092'
     volumes:
-      - /mnt/d/MY_FOLDER/Project/vuaBE/app/config/config.json:/app/config/config.json
+      - ./app/config/config.json:/app/config/config.json
+      - ./pipeline:/app  # Ensures the correct working directory
+    networks:
+      - app_network
+
 
   kafka:
     image: confluentinc/cp-kafka:latest
-    hostname: kafka
     container_name: kafka
     ports:
-      - 9092:9092
+      - "9092:9092"
+      - "29092:29092"
     environment:
       KAFKA_BROKER_ID: 1
-      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT,CONTROLLER:PLAINTEXT
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
       KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:29092,PLAINTEXT_HOST://localhost:9092
-      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
-      KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
-      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
-      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
-      KAFKA_PROCESS_ROLES: broker,controller
-      KAFKA_NODE_ID: 1
-      KAFKA_CONTROLLER_QUORUM_VOTERS: 1@kafka:29093
-      KAFKA_LISTENERS: PLAINTEXT://kafka:29092,CONTROLLER://kafka:29093,PLAINTEXT_HOST://0.0.0.0:9092
+      KAFKA_LISTENERS: PLAINTEXT://kafka:29092,PLAINTEXT_HOST://0.0.0.0:9092
       KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
-      KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
-      KAFKA_LOG_DIRS: /tmp/kraft-combined-logs
-      CLUSTER_ID: MkU3OEVBNTcwNTJENDM2Qk
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+    healthcheck:
+      test: ["CMD-SHELL", "kafka-topics --bootstrap-server kafka:29092 --list || exit 1"]
+      interval: 5s
+      retries: 3
+      start_period: 30s
+    depends_on:
+      - zookeeper
+    networks:
+      - app_network
 
   zookeeper:
     image: confluentinc/cp-zookeeper:latest
+    container_name: zookeeper
     environment:
       ZOOKEEPER_CLIENT_PORT: 2181
+    networks:
+      - app_network
 
+  elastic:
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.5.3
+    environment:
+      - discovery.type=single-node
+      - "ES_JAVA_OPTS=-Xms128m -Xmx256m"
+      - bootstrap.memory_lock=false
+      - xpack.security.enabled=false
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+    ports:
+      - "9200:9200"
+    networks:
+      - app_network
 volumes:
   db_data:
+
+networks:
+  app_network:
+    driver: bridge
