@@ -5,7 +5,8 @@ import (
 	"app/handler"
 	"app/internal/cache"
 	"app/internal/infra"
-	"app/internal/kafka"
+	"app/internal/infra/elas"
+	"app/internal/infra/kafka"
 	"app/migration"
 	"app/repository"
 	"log"
@@ -31,9 +32,15 @@ func main() {
 	newHandler := handler.NewNewsHandler(newRepository, redisCache)
 
 	// Job handler initialization
-	producer := kafka.NewKafkaProducer("scrape-news", 0) // default topic and partition - we can custom it later
+	log.Println(cfg.Kafka)
+	producer := kafka.NewKafkaProducer(cfg.Kafka, "scrape-news", 0)
 	jobRepository := repository.NewJobRepository(database, producer)
 	jobHandler := handler.NewJobHandler(jobRepository, redisCache)
+
+	// Search handler initialization
+	esClient, _ := elas.NewElasticsearchClient(cfg)
+	searchRepository := repository.NewSearchRepository(database, esClient)
+	searchHander := handler.NewSearchHandler(searchRepository)
 
 	router := gin.Default()
 
@@ -44,6 +51,12 @@ func main() {
 		newsRoutes.POST("/:category", newHandler.AddNews)
 		newsRoutes.PUT("/:category/:id", newHandler.UpdateNews)
 		newsRoutes.DELETE("/:category/:id", newHandler.DeleteNews)
+	}
+
+	searchRoutes := router.Group("/search")
+	{
+		searchRoutes.POST("/:simple", searchHander.SearchSimple)
+		// searchRoutes.POST("/semantic/:keyword", newHandler.SearchSemantic)
 	}
 
 	// API for jobs
